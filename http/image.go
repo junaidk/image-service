@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -15,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	imageapi "github.com/junaidk/image-service"
 	"github.com/junaidk/image-service/internal/image"
-	"github.com/junaidk/image-service/internal/token"
 )
 
 func (s *Server) imageRoutes() chi.Router {
@@ -27,17 +25,15 @@ func (s *Server) imageRoutes() chi.Router {
 
 func (s *Server) createImageHandler(w http.ResponseWriter, r *http.Request) {
 	expToken := chi.URLParam(r, "token")
-	if !token.Validate(expToken) {
-		s.badRequestResponse(w, r, fmt.Errorf("invalid toekn"))
+	if !s.tokenManger.Validate(expToken) {
+		s.badRequestResponse(w, r, fmt.Errorf("invalid token"))
 		return
 	}
 
 	// 10 MB file size
 	reqSize := int64(10 * 1024 * 1024)
-
 	r.Body = http.MaxBytesReader(w, r.Body, reqSize)
 	err := r.ParseMultipartForm(reqSize)
-
 	if err != nil {
 		s.badRequestResponse(w, r, err)
 		return
@@ -55,8 +51,8 @@ func (s *Server) createImageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
+		// Get image metadata
 		imgData := &imageapi.Image{}
-
 		tmp, err := image.GetMetadata(file, path.Ext(fileHeader.Filename))
 		if err == nil {
 			imgData = tmp
@@ -65,6 +61,7 @@ func (s *Server) createImageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		_, _ = file.Seek(0, io.SeekStart)
 
+		// Compute image hash
 		hash := sha256.New()
 		io.Copy(hash, file)
 		hashValue := hex.EncodeToString(hash.Sum(nil))
@@ -73,21 +70,16 @@ func (s *Server) createImageHandler(w http.ResponseWriter, r *http.Request) {
 		imgData.Hash = hashValue
 		imgData.Name = fileHeader.Filename
 
+		// Save image data in database
 		err = s.ImageService.CreateImage(r.Context(), imgData)
 		isImgExist := false
 		if err != nil {
-			switch imageapi.ErrorCode(err) {
-			case imageapi.ERRCONFLICT:
-				slog.Info("image already exists")
-				isImgExist = true
-			default:
-				s.serverErrorResponse(w, r, err)
-				return
-			}
+			s.serverErrorResponse(w, r, err)
+			return
 		}
 
+		// write image file to disk if it does not exist
 		if !isImgExist {
-			// Create a new file in the local file system
 			_, _ = file.Seek(0, io.SeekStart)
 			dst, err := os.Create(filepath.Join(s.ImageDir, hashValue+path.Ext(fileHeader.Filename)))
 			if err != nil {

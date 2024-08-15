@@ -17,10 +17,11 @@ type config struct {
 		dsn string
 	}
 	http struct {
-		addr        string
-		port        string
-		staticToken string
-		imageDir    string
+		addr          string
+		port          string
+		staticToken   string
+		signingSecret string
+		imageDir      string
 	}
 }
 
@@ -62,8 +63,9 @@ func (a *application) ParseFlags() error {
 	flag.StringVar(&cfg.http.port, "port", lookupEnvOrString("HTTP_PORT", "8080"), "API server port")
 	flag.StringVar(&cfg.http.addr, "addr", lookupEnvOrString("HTTP_ADDR", "localhost:8080"), "API server address exposed to API user")
 	flag.StringVar(&cfg.http.staticToken, "token", lookupEnvOrString("HTTP_TOKEN", "secret"), "API server token for static auth")
+	flag.StringVar(&cfg.http.signingSecret, "secret", lookupEnvOrString("HTTP_SECRET", "my-secret"), "Secret used to sign upload urls")
 	flag.StringVar(&cfg.http.imageDir, "image-dir", lookupEnvOrString("HTTP_IMAGE_DIR", "/home/junaid/documents/gowork/samples/image-api/image-data"), "Dir to store images")
-	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://app-user:secret@localhost:5432/app_db?sslmode=disable", "DSN")
+	flag.StringVar(&cfg.db.dsn, "dsn", lookupEnvOrString("DB_DSN", "postgres://app-user:secret@localhost:5432/app_db?sslmode=disable"), "DSN")
 
 	a.config = cfg
 

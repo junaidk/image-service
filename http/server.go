@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	ims "github.com/junaidk/image-service"
+	"github.com/junaidk/image-service/internal/token"
 )
 
 const AUTH_TOKEN = "secret"
@@ -15,18 +16,21 @@ const AUTH_TOKEN = "secret"
 type Server struct {
 	ln                net.Listener
 	server            *http.Server
+	tokenManger       *token.Manager
 	Addr              string
 	Port              string
 	ImageService      ims.ImageService
 	StatisticsService ims.StatisticsService
 	ImageDir          string
 	StaticToken       string
+	SigningSecret     string
 }
 
 func NewServer() *Server {
 	svr := &Server{
 		server: &http.Server{},
 	}
+	svr.tokenManger = token.New(svr.SigningSecret)
 
 	router := chi.NewRouter()
 	router.Use(loggingMiddleware(slog.Default()))

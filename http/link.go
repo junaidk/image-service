@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/junaidk/image-service/internal/token"
 )
 
 func (s *Server) linkRoutes() chi.Router {
@@ -24,7 +23,7 @@ func (s *Server) createLinkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expToken, _ := token.Create(expirationTime, "")
+	expToken, _ := s.tokenManger.Create(expirationTime, "")
 
 	uploadLink := fmt.Sprintf("http://%s/v1/image/upload/%s", s.Addr, expToken)
 

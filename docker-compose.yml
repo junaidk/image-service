@@ -1,13 +1,50 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  postgres:
+  db:
     image: postgres:14-alpine
-    ports:
-      - 5432:5432
-    volumes:
-      - /home/junaid/documents/docker-vol/postgres:/var/lib/postgresql/data
+    container_name: postgres_db
     environment:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=app-user
       - POSTGRES_DB=app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  migrate:
+    image: migrate/migrate   
+    container_name: migrations 
+    volumes:
+      - ./migrations:/migrations
+    command: 
+      - -path
+      - /migrations/ 
+      - -database
+      - postgres://app-user:secret@db:5432/app_db?sslmode=disable 
+      - up 
+    depends_on:
+      - db  
+
+  app:
+    image: image-service:latest
+    container_name: image_api_app
+    environment:
+      - HTTP_PORT=8080
+      - HTTP_ADDR=localhost:8080
+      - HTTP_TOKEN=secret
+      - HTTP_SECRET=my-secret
+      - HTTP_IMAGE_DIR=/images
+      - DB_DSN=postgres://app-user:secret@db:5432/app_db?sslmode=disable
+    volumes:
+      - app_data:/images
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - migrate
+
+volumes:
+  db_data: 
+  app_data:    

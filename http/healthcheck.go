@@ -3,7 +3,6 @@ package http
 import "net/http"
 
 func (s *Server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
-
 	resp := envelope{
 		"status": "available",
 	}

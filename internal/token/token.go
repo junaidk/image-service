@@ -8,22 +8,22 @@ import (
 	"time"
 )
 
-const (
-	// Secret key for generating the HMAC signature
-	hmacSecret = "my_secret_key"
-)
+type Manager struct {
+	hmacSecret string
+}
 
-func Create(expirationTime time.Duration, secretToken string) (string, error) {
+func New(secret string) *Manager {
+	return &Manager{hmacSecret: secret}
+}
 
+func (m Manager) Create(expirationTime time.Duration, secretToken string) (string, error) {
 	expiry := time.Now().Add(expirationTime).Unix()
-
-	// Generate HMAC token that includes the expiry timestamp
-	token := generateHMACToken(secretToken, expiry)
+	token := m.generateHMACToken(secretToken, expiry)
 
 	return token, nil
 }
 
-func generateHMACToken(secretToken string, expiry int64) string {
+func (m Manager) generateHMACToken(secretToken string, expiry int64) string {
 	// Convert expiry timestamp to byte slice
 	expiryBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(expiryBytes, uint64(expiry))
@@ -32,7 +32,7 @@ func generateHMACToken(secretToken string, expiry int64) string {
 	message := append([]byte(secretToken), expiryBytes...)
 
 	// Generate the HMAC signature
-	h := hmac.New(sha256.New, []byte(hmacSecret))
+	h := hmac.New(sha256.New, []byte(m.hmacSecret))
 	h.Write(message)
 	signature := h.Sum(nil)
 
@@ -41,7 +41,7 @@ func generateHMACToken(secretToken string, expiry int64) string {
 	return base64.URLEncoding.EncodeToString(token)
 }
 
-func Validate(tokenString string) bool {
+func (m Manager) Validate(tokenString string) bool {
 	token, err := base64.URLEncoding.DecodeString(tokenString)
 	if err != nil || len(token) < 8+sha256.Size {
 		return false
@@ -54,7 +54,7 @@ func Validate(tokenString string) bool {
 		return false
 	}
 
-	expectedToken := generateHMACToken("", expiry)
+	expectedToken := m.generateHMACToken("", expiry)
 
 	return tokenString == expectedToken
 }

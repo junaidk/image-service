@@ -83,10 +83,8 @@ func FormatError(err error) error {
 	}
 
 	switch err.Error() {
-	case "pq: duplicate key value violates unique constraint \"images_hash_key\"":
-		return imageapi.Errorf(imageapi.ERRCONFLICT, "Image already exists.")
 	case "sql: no rows in result set":
-		return imageapi.Errorf(imageapi.ERRNOTFOUND, "Image not found.")
+		return imageapi.Errorf(imageapi.ERRNOTFOUND, "Resource not found.")
 	default:
 		return err
 	}
