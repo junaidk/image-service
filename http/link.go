@@ -23,7 +23,7 @@ func (s *Server) createLinkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expToken, _ := s.tokenManger.Create(expirationTime, "")
+	expToken, _ := s.tokenManger.Create(expirationTime)
 
 	uploadLink := fmt.Sprintf("http://%s/v1/image/upload/%s", s.Addr, expToken)
 

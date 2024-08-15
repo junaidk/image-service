@@ -16,20 +16,19 @@ func New(secret string) *Manager {
 	return &Manager{hmacSecret: secret}
 }
 
-func (m Manager) Create(expirationTime time.Duration, secretToken string) (string, error) {
+func (m Manager) Create(expirationTime time.Duration) (string, error) {
 	expiry := time.Now().Add(expirationTime).Unix()
-	token := m.generateHMACToken(secretToken, expiry)
+	token := m.generateHMACToken(expiry)
 
 	return token, nil
 }
 
-func (m Manager) generateHMACToken(secretToken string, expiry int64) string {
+func (m Manager) generateHMACToken(expiry int64) string {
 	// Convert expiry timestamp to byte slice
 	expiryBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(expiryBytes, uint64(expiry))
 
-	// Create the message to be signed, including the expiry time
-	message := append([]byte(secretToken), expiryBytes...)
+	message := expiryBytes
 
 	// Generate the HMAC signature
 	h := hmac.New(sha256.New, []byte(m.hmacSecret))
@@ -54,7 +53,7 @@ func (m Manager) Validate(tokenString string) bool {
 		return false
 	}
 
-	expectedToken := m.generateHMACToken("", expiry)
+	expectedToken := m.generateHMACToken(expiry)
 
 	return tokenString == expectedToken
 }
