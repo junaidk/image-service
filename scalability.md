@@ -30,6 +30,7 @@ Divide the service in to 4 main components
 ### On top of what is mentioned above, what would you use the batch/real-time pipeline for?
 
 Batch pipeline can be used for:
+
     - create thumbnails
     - format conversion
     - pre compute different sizes
@@ -37,6 +38,7 @@ Batch pipeline can be used for:
     - garbage collection
 
 Real-time pipeline can be used for:
+
     - image statistics
     - service usage statistics
     - duplicate detection
