@@ -42,8 +42,8 @@ clean:
 # View application logs
 .PHONY: logs
 logs:
-	$(DOCKER_COMPOSE_CMD) logs -f $(APP_CONTAINER)
-
+	$(DOCKER_COMPOSE_CMD) logs -f 
+	
 # Remove Docker containers, networks, volumes, and images
 .PHONY: down-clear
 down-clear:
