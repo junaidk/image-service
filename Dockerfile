@@ -21,4 +21,3 @@ FROM alpine:latest
 COPY --from=builder /workspace/app /usr/bin/
 
 ENTRYPOINT ["/usr/bin/app"]
-#CMD ["/usr/bin/app"]
