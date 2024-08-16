@@ -2,6 +2,7 @@ package postgress
 
 import (
 	"context"
+	"database/sql"
 
 	imageapi "github.com/junaidk/image-service"
 )
@@ -130,11 +131,15 @@ func (s *StatisticsService) getFrequencyStatistics(ctx context.Context) ([]image
 
 	for rows.Next() {
 		var item imageapi.FrequencyItem
+		var date sql.NullTime
 		if err := rows.Scan(
-			&item.Day,
+			&date,
 			&item.Count,
 		); err != nil {
 			return nil, err
+		}
+		if date.Valid {
+			item.Date = date.Time.Format("02-01-2006")
 		}
 		imgFormat = append(imgFormat, item)
 	}

@@ -19,7 +19,7 @@ type CameraModelItem struct {
 }
 
 type FrequencyItem struct {
-	Day   string `json:"day"`
+	Date  string `json:"date"`
 	Count int    `json:"count"`
 }
 
